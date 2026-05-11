@@ -281,6 +281,16 @@ async def get_trip(trip_id: str, user: dict = Depends(current_user)):
     trip = await db.trips.find_one({"id": trip_id}, {"_id": 0})
     if not trip:
         raise HTTPException(404, "Trip not found")
+
+    # Authorization check: user must be owner or member
+    is_owner = trip.get("owner_id") == user["id"]
+    is_member = any(
+        member.get("id") == user["id"] for member in trip.get("members", [])
+    )
+
+    if not (is_owner or is_member):
+        raise HTTPException(403, "Access denied: you are not a member of this trip")
+
     return trip
 
 
@@ -309,6 +319,19 @@ async def create_expense(req: ExpenseCreateReq, user: dict = Depends(current_use
 
 @api.get("/expenses")
 async def list_expenses(trip_id: str, user: dict = Depends(current_user)):
+    trip = await db.trips.find_one({"id": trip_id}, {"_id": 0})
+    if not trip:
+        raise HTTPException(404, "Trip not found")
+
+    # Authorization check: user must be owner or member
+    is_owner = trip.get("owner_id") == user["id"]
+    is_member = any(
+        member.get("id") == user["id"] for member in trip.get("members", [])
+    )
+
+    if not (is_owner or is_member):
+        raise HTTPException(403, "Access denied: you are not a member of this trip")
+
     cursor = db.expenses.find({"trip_id": trip_id}, {"_id": 0}).sort("created_at", -1)
     return await cursor.to_list(500)
 
@@ -552,6 +575,19 @@ async def discover():
 # ---------- Trip Tools (Journal/Itinerary/Packing/Polls/Chat/Album/Settle/Reports) ----------
 @api.get("/trip-tools/{trip_id}")
 async def trip_tools(trip_id: str, user: dict = Depends(current_user)):
+    trip = await db.trips.find_one({"id": trip_id}, {"_id": 0})
+    if not trip:
+        raise HTTPException(404, "Trip not found")
+
+    # Authorization check: user must be owner or member
+    is_owner = trip.get("owner_id") == user["id"]
+    is_member = any(
+        member.get("id") == user["id"] for member in trip.get("members", [])
+    )
+
+    if not (is_owner or is_member):
+        raise HTTPException(403, "Access denied: you are not a member of this trip")
+
     return {
         "journal": [
             {
@@ -929,6 +965,15 @@ async def trip_wallet(trip_id: str, user: dict = Depends(current_user)):
     trip = await db.trips.find_one({"id": trip_id}, {"_id": 0})
     if not trip:
         raise HTTPException(404, "Trip not found")
+
+    # Authorization check: user must be owner or member
+    is_owner = trip.get("owner_id") == user["id"]
+    is_member = any(
+        member.get("id") == user["id"] for member in trip.get("members", [])
+    )
+
+    if not (is_owner or is_member):
+        raise HTTPException(403, "Access denied: you are not a member of this trip")
     txs = (
         await db.wallet_tx.find({"trip_id": trip_id}, {"_id": 0})
         .sort("created_at", -1)
