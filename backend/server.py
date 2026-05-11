@@ -272,7 +272,9 @@ async def create_trip(req: TripCreateReq, user: dict = Depends(current_user)):
 
 @api.get("/trips")
 async def list_trips(user: dict = Depends(current_user)):
-    cursor = db.trips.find({"owner_id": user["id"]}, {"_id": 0}).sort("created_at", -1)
+    cursor = db.trips.find(
+        {"$or": [{"owner_id": user["id"]}, {"members.id": user["id"]}]}, {"_id": 0}
+    ).sort("created_at", -1)
     return await cursor.to_list(100)
 
 
@@ -297,6 +299,18 @@ async def get_trip(trip_id: str, user: dict = Depends(current_user)):
 # ---------- Expenses ----------
 @api.post("/expenses")
 async def create_expense(req: ExpenseCreateReq, user: dict = Depends(current_user)):
+    # Verify trip exists and user has access
+    trip = await db.trips.find_one({"id": req.trip_id}, {"_id": 0})
+    if not trip:
+        raise HTTPException(404, "Trip not found")
+
+    is_owner = trip.get("owner_id") == user["id"]
+    is_member = any(
+        member.get("id") == user["id"] for member in trip.get("members", [])
+    )
+    if not (is_owner or is_member):
+        raise HTTPException(403, "Access denied: you are not a member of this trip")
+
     expense_id = str(uuid.uuid4())
     exp = {
         "id": expense_id,
