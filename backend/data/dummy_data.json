@@ -1,0 +1,25 @@
+{
+  "users": [
+    {
+      "id": "demo-user-001",
+      "email": "demo@tripsplit.app",
+      "password": "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/X4.VTtYA.qGZvKG6G",
+      "name": "Demo User",
+      "phone": "+1234567890",
+      "avatar": null,
+      "currency": "USD",
+      "language": "en",
+      "verified": true,
+      "premium": false,
+      "created_at": "2026-05-11T13:00:49.314233+00:00"
+    }
+  ],
+  "trips": [],
+  "expenses": [],
+  "borrows": [],
+  "wallet_tx": [],
+  "grouppay": [],
+  "bookings": [],
+  "ai_messages": [],
+  "otps": []
+}
