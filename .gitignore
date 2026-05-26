@@ -1,90 +1,60 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+.DS_Store
+Thumbs.db
 
-# IDE and editors
-.idea/
 .vscode/
+.idea/
 
-# Dependencies
+.env
+.env.*
+!.env.example
+
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+venv/
+.venv/
+env/
+
+.pytest_cache/
+.mypy_cache
+.ruff_cache
+.coverage
+htmlcov/
+
+*.log
+*.sqlite3
+
+backend/data/*.csv
+backend/data/*.parquet
+
+frontend/node_modules/
 node_modules/
-/node_modules
-/.pnp
-.pnp.js
-.yarn/install-state.gz
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
 
-# Testing
-/coverage
+.expo/
+.expo-shared/
 
-# Next.js
-/.next/
-/out/
-next-env.d.ts
+dist/
+build/
+web-build/
+
+.metro-cache/
+.cache/
+
 *.tsbuildinfo
 
-# Production builds
-/build
-dist/
-dist
+android/
+ios/
 
-# Environment files (comprehensive coverage)
-
-*token.json*
-*credentials.json*
-
-# Logs and debug files
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnpm-debug.log*
-dump.rdb
+pnpm-debug.log*
 
-# System files
-.DS_Store
-*.pem
+coverage/
 
-# Python
-__pycache__/
-*pyc*
-venv/
-.venv/
-
-# Development tools
-chainlit.md
-.chainlit
-.ipynb_checkpoints/
-.ac
-
-# Deployment
-.vercel
-
-# Data and databases
-agenthub/agents/youtube/db
-
-# Archive files and large assets
-**/*.zip
-**/*.tar.gz
-**/*.tar
-**/*.tgz
-*.pack
-*.deb
-*.dylib
-
-# Build caches
-.cache/
-
-memory/test_credentials.md
-
-# Mobile development
-android-sdk/-e 
-# Environment and credential files
-.env
-.env.*
-*.env
-credentials.json
-*.pem
-*.key
-.credentials
+tmp/
+temp/
+*.back
+*.swp
