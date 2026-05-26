@@ -3,6 +3,7 @@
 import uuid
 from typing import Optional
 from fastapi import APIRouter, HTTPException, Depends
+from app.models import now_iso
 from app.core import current_user
 from app.db import get_db
 
@@ -221,7 +222,7 @@ async def book_vendor(vid: str, user: dict = Depends(current_user), db=Depends(g
         "vendor_id": vid,
         "user_id": user["id"],
         "status": "confirmed",
-        "created_at": "2024-01-01T00:00:00+00:00",  # Will be replaced with now_iso()
+        "created_at": now_iso(),
     }
     await db.bookings.insert_one(bk)
     bk.pop("_id", None)

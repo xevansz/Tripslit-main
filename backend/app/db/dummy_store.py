@@ -72,6 +72,48 @@ class DummyStore:
             self._data["users"].append(demo_user)
             self._save()
 
+    @staticmethod
+    def _resolve_dot_notation(item: Dict[str, Any], key: str) -> Any:
+        """Resolve dot-notation keys like 'members.id' against nested dicts/lists."""
+        parts = key.split(".")
+        current: Any = item
+        for part in parts:
+            if isinstance(current, dict):
+                current = current.get(part)
+            elif isinstance(current, list):
+                # For arrays, check if any element matches the remaining path
+                remaining = ".".join(parts[parts.index(part) :])
+                return [
+                    DummyStore._resolve_dot_notation(elem, remaining)
+                    if isinstance(elem, dict)
+                    else elem
+                    for elem in current
+                ]
+            else:
+                return None
+        return current
+
+    @staticmethod
+    def _match_value(item: Dict[str, Any], key: str, value: Any) -> bool:
+        """Check if an item matches a key-value condition, supporting dot-notation."""
+        if "." in key:
+            resolved = DummyStore._resolve_dot_notation(item, key)
+            if isinstance(resolved, list):
+                return value in resolved
+            return resolved == value
+        return item.get(key) == value
+
+    def _matches_query(self, item: Dict[str, Any], query: Dict[str, Any]) -> bool:
+        """Check if item matches all conditions in query (supports $or and dot-notation)."""
+        for key, value in query.items():
+            if key == "$or":
+                if not any(self._matches_query(item, cond) for cond in value):
+                    return False
+            else:
+                if not self._match_value(item, key, value):
+                    return False
+        return True
+
     # Users
     async def find_one(
         self, collection: str, query: Dict[str, Any]
@@ -79,12 +121,7 @@ class DummyStore:
         """Find single document matching query."""
         items = self._data.get(collection, [])
         for item in items:
-            match = True
-            for key, value in query.items():
-                if item.get(key) != value:
-                    match = False
-                    break
-            if match:
+            if self._matches_query(item, query):
                 return dict(item)
         return None
 
@@ -99,31 +136,7 @@ class DummyStore:
         """Find all documents matching query."""
         items = self._data.get(collection, [])
         if query:
-            items = [
-                item
-                for item in items
-                if all(item.get(k) == v for k, v in query.items())
-            ]
-
-        # Handle OR queries (simplified)
-        if query and "$or" in query:
-            or_conditions = query["$or"]
-            other_conditions = {k: v for k, v in query.items() if k != "$or"}
-            items = self._data.get(collection, [])
-            matching = []
-            for item in items:
-                # Check other conditions
-                if other_conditions and not all(
-                    item.get(k) == v for k, v in other_conditions.items()
-                ):
-                    continue
-                # Check OR conditions
-                or_match = any(
-                    item.get(k) == v for cond in or_conditions for k, v in cond.items()
-                )
-                if or_match:
-                    matching.append(item)
-            items = matching
+            items = [item for item in items if self._matches_query(item, query)]
 
         if sort_key:
             items = sorted(items, key=lambda x: x.get(sort_key, ""), reverse=sort_desc)
@@ -139,13 +152,16 @@ class DummyStore:
         return type("Result", (), {"inserted_id": document["id"]})()
 
     async def update_one(
-        self, collection: str, query: Dict[str, Any], update: Dict[str, Any]
+        self,
+        collection: str,
+        query: Dict[str, Any],
+        update: Dict[str, Any],
+        upsert: bool = False,
     ) -> None:
-        """Update a document."""
+        """Update a document. Supports upsert."""
         items = self._data.get(collection, [])
         for item in items:
-            match = all(item.get(k) == v for k, v in query.items())
-            if match:
+            if self._matches_query(item, query):
                 # Handle $set operator
                 if "$set" in update:
                     item.update(update["$set"])
@@ -155,12 +171,24 @@ class DummyStore:
                         item[key] = item.get(key, 0) + value
                 self._save()
                 return
+        # Upsert: insert if no match found
+        if upsert:
+            new_doc = dict(query)
+            if "$set" in update:
+                new_doc.update(update["$set"])
+            if "$inc" in update:
+                for key, value in update["$inc"].items():
+                    new_doc[key] = value
+            if "id" not in new_doc:
+                new_doc["id"] = str(uuid.uuid4())
+            self._data[collection].append(new_doc)
+            self._save()
 
     async def delete_one(self, collection: str, query: Dict[str, Any]) -> None:
         """Delete a document."""
         items = self._data.get(collection, [])
         for i, item in enumerate(items):
-            if all(item.get(k) == v for k, v in query.items()):
+            if self._matches_query(item, query):
                 del items[i]
                 self._save()
                 return
@@ -249,13 +277,16 @@ class Collection:
         query: Optional[Dict[str, Any]] = None,
         projection: Optional[Dict[str, Any]] = None,
     ):
-        return db.find(self.name, query or {}).find(query or {}).find(query or {})
+        qb = QueryBuilder(db, self.name, query or {}, projection)
+        return qb
 
     async def insert_one(self, document: Dict[str, Any]) -> Any:
         return await db.insert_one(self.name, document)
 
-    async def update_one(self, query: Dict[str, Any], update: Dict[str, Any]) -> None:
-        return await db.update_one(self.name, query, update)
+    async def update_one(
+        self, query: Dict[str, Any], update: Dict[str, Any], upsert: bool = False
+    ) -> None:
+        return await db.update_one(self.name, query, update, upsert=upsert)
 
     async def delete_one(self, query: Dict[str, Any]) -> None:
         return await db.delete_one(self.name, query)
