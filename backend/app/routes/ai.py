@@ -1,11 +1,16 @@
 """AI TripBuddy chat routes."""
 
-import uuid
 import logging
-from fastapi import APIRouter, HTTPException, Depends
-from app.models import ChatReq, now_iso
-from app.core import current_user, EMERGENT_LLM_KEY
+import uuid
+from typing import cast
+
+from fastapi import APIRouter, Depends, HTTPException
+from google import genai
+from google.genai import types
+
+from app.core import GEMINI_API_KEY, current_user
 from app.db import get_db
+from app.models import ChatReq, now_iso
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -18,30 +23,71 @@ TRIPBUDDY_SYSTEM = (
     "If asked about safety, mention SOS feature and emergency contacts."
 )
 
+MODEL = "gemini-2.5-flash"
+
+# In-memeory session history
+_session_cache: dict[str, list[types.Content]] = {}
+
+
+async def _load_history(
+    session_id: str,
+    user_id: str,
+    db,
+) -> list[types.Content]:
+    """Checks in-memory first; falls back to DB so history survives a session restart"""
+
+    if session_id in _session_cache:
+        return _session_cache[session_id]
+
+    cursor = db.ai_messages.find(
+        {"session_id": session_id, "user_id": user_id},
+        {"_id": 0},
+    ).sort("created_at", 1)
+
+    records = await cursor.to_list(200)
+
+    history: list[types.Content] = []
+
+    for r in records:
+        history.append(
+            types.Content(
+                role="user",
+                parts=[types.Part(text=r["message"])],
+            )
+        )
+
+        history.append(
+            types.Content(
+                role="model",
+                parts=[types.Part(text=r["reply"])],
+            )
+        )
+
+    _session_cache[session_id] = history
+    return history
+
 
 @router.post("/ai/chat")
 async def ai_chat(req: ChatReq, user: dict = Depends(current_user), db=Depends(get_db)):
-    if not EMERGENT_LLM_KEY:
-        # Return mock response if no LLM key configured
-        return {"reply": "Hi! I'm TripBuddy, your travel assistant. I'd love to help you plan your trip and split expenses fairly with your crew! What would you like to know?"}
+    if not GEMINI_API_KEY:
+        return {"reply": "Hi! No API key?"}
+
+    history = await _load_history(req.session_id, user["id"], db=db)
 
     try:
-        from emergentintegrations.llm.chat import LlmChat, UserMessage
-        chat = LlmChat(
-            api_key=EMERGENT_LLM_KEY,
-            session_id=req.session_id,
-            system_message=TRIPBUDDY_SYSTEM,
-        ).with_model("anthropic", "claude-sonnet-4-5-20250929")
-        reply = await chat.send_message(UserMessage(text=req.message))
-    except ImportError:
-        # Fallback if emergentintegrations not installed
-        logger.warning("emergentintegrations not installed, using mock response")
-        reply = "Hi! I'm TripBuddy. I'd love to help, but my AI features are currently offline. Please try again later!"
+        client = genai.Client(api_key=GEMINI_API_KEY)
+        chat = client.aio.chats.create(
+            model=MODEL,
+            config=types.GenerateContentConfig(system_instruction=TRIPBUDDY_SYSTEM),
+            history=cast(list[types.ContentOrDict], history),
+        )
+        response = await chat.send_message(req.message)
+        reply = response.text
     except Exception as e:
         logger.exception("AI chat failed")
         raise HTTPException(500, f"AI error: {e}")
 
-    msg = {
+    record = {
         "id": str(uuid.uuid4()),
         "session_id": req.session_id,
         "user_id": user["id"],
@@ -49,12 +95,30 @@ async def ai_chat(req: ChatReq, user: dict = Depends(current_user), db=Depends(g
         "reply": reply,
         "created_at": now_iso(),
     }
-    await db.ai_messages.insert_one(msg)
+    await db.ai_messages.insert_one(record)
+
+    # Update in-memory cache
+    history.append(
+        types.Content(
+            role="user",
+            parts=[types.Part(text=req.message)],
+        )
+    )
+
+    history.append(
+        types.Content(
+            role="model",
+            parts=[types.Part(text=reply)],
+        )
+    )
+
     return {"reply": reply}
 
 
 @router.get("/ai/history/{session_id}")
-async def ai_history(session_id: str, user: dict = Depends(current_user), db=Depends(get_db)):
+async def ai_history(
+    session_id: str, user: dict = Depends(current_user), db=Depends(get_db)
+):
     cursor = db.ai_messages.find(
         {"session_id": session_id, "user_id": user["id"]}, {"_id": 0}
     ).sort("created_at", 1)

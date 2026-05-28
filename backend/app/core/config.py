@@ -1,8 +1,9 @@
 """Configuration settings for the application."""
 
-import os
 import logging
+import os
 from pathlib import Path
+
 from dotenv import load_dotenv
 
 ROOT_DIR = Path(__file__).parent.parent.parent
@@ -23,7 +24,7 @@ if JWT_SECRET == "tripsplit_secret":
     _logger.warning("Using default JWT_SECRET — set JWT_SECRET env var in production!")
 
 # External Services
-EMERGENT_LLM_KEY = os.environ.get("EMERGENT_LLM_KEY", "")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 
 # CORS
 CORS_ORIGINS = ["*"]
