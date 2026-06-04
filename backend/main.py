@@ -1,18 +1,30 @@
 """Main entry point for the TripSplit FastAPI application."""
 
 import logging
+from contextlib import asynccontextmanager
+
+from app.db.database import _db
+from app.routes import api
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
-
-from app.routes import api
-from app.db.database import _db
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="TripSplit API", version="1.0.0")
+
+@asynccontextmanager
+async def lifespan(app):
+    # startup
+    yield
+
+    # On shutdown
+    async def shutdown():
+        await _db.close()
+
+
+app = FastAPI(title="TripSplit API", version="1.0.0", lifespan=lifespan)
 
 # Include all routes
 app.include_router(api)
@@ -29,11 +41,6 @@ app.add_middleware(
 @app.get("/")
 async def root():
     return {"service": "TripSplit", "status": "ok"}
-
-
-@app.on_event("shutdown")
-async def shutdown():
-    await _db.close()
 
 
 if __name__ == "__main__":

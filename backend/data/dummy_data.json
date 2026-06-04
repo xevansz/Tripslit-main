@@ -12,6 +12,19 @@
       "verified": true,
       "premium": false,
       "created_at": "2026-05-11T13:00:49.314233+00:00"
+    },
+    {
+      "id": "5ae92bf1-c11b-4a1a-a452-f9e16c487f01",
+      "email": "mahi@gmail.com",
+      "password": "$2b$12$MBdpMYRSUwZnmeN0RQx.Iuv5CxymHWaKap4hk4392SEOJB98VWjTa",
+      "name": "Mahi",
+      "phone": "",
+      "avatar": null,
+      "currency": "INR",
+      "language": "en",
+      "verified": true,
+      "premium": false,
+      "created_at": "2026-06-04T12:00:59.192342+00:00"
     }
   ],
   "trips": [],
@@ -21,5 +34,12 @@
   "grouppay": [],
   "bookings": [],
   "ai_messages": [],
-  "otps": []
+  "otps": [
+    {
+      "email": "mahi@gmail.com",
+      "code": "123456",
+      "created_at": "2026-06-04T12:00:59.192763+00:00",
+      "id": "5c3364af-ae8c-41a8-88d7-d31a64665b9c"
+    }
+  ]
 }
