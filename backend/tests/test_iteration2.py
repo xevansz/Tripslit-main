@@ -1,10 +1,13 @@
 """Iteration 2 tests: Notifications, Trip Wallet, Group Pay."""
+
 import pytest
 
 
 # ---------- Notifications ----------
 class TestNotifications:
-    def test_list_notifications_returns_6_seeded(self, api_client, base_url, auth_headers):
+    def test_list_notifications_returns_6_seeded(
+        self, api_client, base_url, auth_headers
+    ):
         r = api_client.get(f"{base_url}/api/notifications", headers=auth_headers)
         assert r.status_code == 200, r.text
         items = r.json()
@@ -38,11 +41,23 @@ def wallet_trip_id(api_client, base_url, auth_headers):
 
 
 class TestTripWallet:
-    def test_wallet_initial_state(self, api_client, base_url, auth_headers, wallet_trip_id):
-        r = api_client.get(f"{base_url}/api/wallet/{wallet_trip_id}", headers=auth_headers)
+    def test_wallet_initial_state(
+        self, api_client, base_url, auth_headers, wallet_trip_id
+    ):
+        r = api_client.get(
+            f"{base_url}/api/wallet/{wallet_trip_id}", headers=auth_headers
+        )
         assert r.status_code == 200, r.text
         w = r.json()
-        for k in ("budget", "collected", "spent", "balance", "remaining_budget", "contributions", "transactions"):
+        for k in (
+            "budget",
+            "collected",
+            "spent",
+            "balance",
+            "remaining_budget",
+            "contributions",
+            "transactions",
+        ):
             assert k in w
         assert isinstance(w["contributions"], list)
         assert isinstance(w["transactions"], list)
@@ -54,12 +69,18 @@ class TestTripWallet:
         assert w["balance"] == 0
 
     def test_wallet_404_for_unknown_trip(self, api_client, base_url, auth_headers):
-        r = api_client.get(f"{base_url}/api/wallet/does-not-exist", headers=auth_headers)
+        r = api_client.get(
+            f"{base_url}/api/wallet/does-not-exist", headers=auth_headers
+        )
         assert r.status_code == 404
 
-    def test_contribute_increases_balance(self, api_client, base_url, auth_headers, wallet_trip_id):
+    def test_contribute_increases_balance(
+        self, api_client, base_url, auth_headers, wallet_trip_id
+    ):
         # GET before
-        r0 = api_client.get(f"{base_url}/api/wallet/{wallet_trip_id}", headers=auth_headers)
+        r0 = api_client.get(
+            f"{base_url}/api/wallet/{wallet_trip_id}", headers=auth_headers
+        )
         before = r0.json()["balance"]
 
         tx = {
@@ -78,7 +99,9 @@ class TestTripWallet:
         assert "_id" not in body
 
         # GET after - verify persistence + balance increment
-        r2 = api_client.get(f"{base_url}/api/wallet/{wallet_trip_id}", headers=auth_headers)
+        r2 = api_client.get(
+            f"{base_url}/api/wallet/{wallet_trip_id}", headers=auth_headers
+        )
         assert r2.status_code == 200
         w = r2.json()
         assert w["balance"] == round(before + 250.0, 2)
@@ -88,7 +111,10 @@ class TestTripWallet:
         assert maya is not None
         assert maya["paid"] >= 250.0
         # transactions list contains the new tx
-        assert any(t.get("amount") == 250.0 and t.get("member") == "Maya" for t in w["transactions"])
+        assert any(
+            t.get("amount") == 250.0 and t.get("member") == "Maya"
+            for t in w["transactions"]
+        )
 
 
 # ---------- Group Pay ----------
@@ -100,7 +126,9 @@ class TestGroupPay:
             "members": ["Me", "Maya", "Jordan"],
             "split_method": "equal",
         }
-        r = api_client.post(f"{base_url}/api/grouppay", headers=auth_headers, json=payload)
+        r = api_client.post(
+            f"{base_url}/api/grouppay", headers=auth_headers, json=payload
+        )
         assert r.status_code == 200, r.text
         s = r.json()
         assert s["merchant"] == "Sunset Beach Cafe"
@@ -114,7 +142,9 @@ class TestGroupPay:
             assert m["share"] == expected_share
             assert m["approved"] is False
 
-    def test_approve_flow_completes_when_all_approved(self, api_client, base_url, auth_headers):
+    def test_approve_flow_completes_when_all_approved(
+        self, api_client, base_url, auth_headers
+    ):
         # create session
         payload = {
             "merchant": "TEST_Merchant",
@@ -122,7 +152,9 @@ class TestGroupPay:
             "members": ["Me", "Maya", "Jordan"],
             "split_method": "equal",
         }
-        r = api_client.post(f"{base_url}/api/grouppay", headers=auth_headers, json=payload)
+        r = api_client.post(
+            f"{base_url}/api/grouppay", headers=auth_headers, json=payload
+        )
         assert r.status_code == 200
         sid = r.json()["id"]
 

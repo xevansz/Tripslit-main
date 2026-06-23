@@ -1,8 +1,10 @@
 """Shared fixtures for TripSplit backend tests."""
+
 import os
 import time
-import requests
+
 import pytest
+import requests
 
 BASE_URL = "https://travel-fintech-app.preview.emergentagent.com"
 
@@ -22,7 +24,7 @@ def api_client():
 @pytest.fixture(scope="session")
 def test_user(api_client):
     """Signup a fresh user and return creds + token."""
-    email = f"test+{int(time.time()*1000)}@tripsplit.com"
+    email = f"test+{int(time.time() * 1000)}@tripsplit.com"
     password = "secret123"
     r = api_client.post(
         f"{BASE_URL}/api/auth/signup",

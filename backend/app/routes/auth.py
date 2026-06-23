@@ -1,18 +1,25 @@
 """Authentication routes."""
 
-import uuid
 import logging
-from fastapi import APIRouter, HTTPException, Depends
+import uuid
+
+from fastapi import APIRouter, Depends, HTTPException
+
+from app.core.security import (
+    current_user,
+    hash_pw,
+    make_token,
+    verify_pw,
+)
+from app.db import get_db
 from app.models import (
-    SignupReq,
     LoginReq,
     OtpVerifyReq,
     ProfileSetupReq,
+    SignupReq,
     TokenResp,
     now_iso,
 )
-from app.core import hash_pw, verify_pw, make_token, current_user
-from app.db import get_db
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -69,7 +76,9 @@ async def verify_otp(req: OtpVerifyReq, db=Depends(get_db)):
 
 
 @router.put("/profile")
-async def update_profile(req: ProfileSetupReq, user: dict = Depends(current_user), db=Depends(get_db)):
+async def update_profile(
+    req: ProfileSetupReq, user: dict = Depends(current_user), db=Depends(get_db)
+):
     await db.users.update_one(
         {"id": user["id"]},
         {

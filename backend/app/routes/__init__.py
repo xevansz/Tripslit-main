@@ -1,5 +1,17 @@
 from fastapi import APIRouter
-from app.routes import auth, trips, expenses, borrow, vendors, wallet, grouppay, ai, notifications, tools
+
+from app.routes import (
+    ai,
+    auth,
+    borrow,
+    expenses,
+    grouppay,
+    notifications,
+    tools,
+    trips,
+    vendors,
+    wallet,
+)
 
 api = APIRouter(prefix="/api")
 

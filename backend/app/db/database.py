@@ -1,6 +1,6 @@
 """Database abstraction layer - supports both MongoDB and dummy storage."""
 
-from app.core.config import MONGO_URL, DB_NAME, USE_DUMMY_DB
+from app.core.config import DB_NAME, MONGO_URL, USE_DUMMY_DB
 
 # Try to import motor, but make it optional for demo mode
 try:

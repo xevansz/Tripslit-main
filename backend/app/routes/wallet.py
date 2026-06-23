@@ -1,10 +1,12 @@
 """Trip wallet routes."""
 
 import uuid
-from fastapi import APIRouter, HTTPException, Depends
-from app.models import WalletTxReq, now_iso
-from app.core import current_user
+
+from fastapi import APIRouter, Depends, HTTPException
+
+from app.core.security import current_user
 from app.db import get_db
+from app.models import WalletTxReq, now_iso
 
 router = APIRouter()
 

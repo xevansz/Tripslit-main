@@ -1,11 +1,13 @@
 """Security utilities for authentication and authorization."""
 
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, Optional
+
 import bcrypt
 import jwt
-from datetime import datetime, timezone, timedelta
-from fastapi import HTTPException, Header, Depends
-from typing import Optional, Dict, Any
-from app.core.config import JWT_SECRET, JWT_ALG
+from fastapi import Depends, Header, HTTPException
+
+from app.core.config import JWT_ALG, JWT_SECRET
 from app.db.database import get_db
 
 
@@ -31,7 +33,7 @@ def make_token(user_id: str, email: str) -> str:
 
 async def current_user(
     authorization: Optional[str] = Header(None),
-    db = Depends(get_db),
+    db=Depends(get_db),
 ) -> Dict[str, Any]:
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(401, "Missing token")

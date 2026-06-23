@@ -1,5 +1,7 @@
 """TripSplit backend API end-to-end tests covering all MVP endpoints."""
+
 import time
+
 import pytest
 
 
@@ -65,7 +67,9 @@ class TestAuth:
         )
         assert r.status_code == 400
 
-    def test_me_returns_current_user(self, api_client, base_url, auth_headers, test_user):
+    def test_me_returns_current_user(
+        self, api_client, base_url, auth_headers, test_user
+    ):
         r = api_client.get(f"{base_url}/api/auth/me", headers=auth_headers)
         assert r.status_code == 200
         assert r.json()["email"] == test_user["email"]
@@ -115,7 +119,9 @@ class TestTrips:
         # owner + 2 members
         assert len(body["members"]) == 3
 
-    def test_list_trips_includes_created(self, api_client, base_url, auth_headers, trip_id):
+    def test_list_trips_includes_created(
+        self, api_client, base_url, auth_headers, trip_id
+    ):
         r = api_client.get(f"{base_url}/api/trips", headers=auth_headers)
         assert r.status_code == 200
         items = r.json()
@@ -129,7 +135,9 @@ class TestTrips:
 
 # ---------- Expenses ----------
 class TestExpenses:
-    def test_create_and_list_expense(self, api_client, base_url, auth_headers, trip_id, test_user):
+    def test_create_and_list_expense(
+        self, api_client, base_url, auth_headers, trip_id, test_user
+    ):
         payload = {
             "trip_id": trip_id,
             "amount": 120.50,
@@ -139,7 +147,9 @@ class TestExpenses:
             "split_method": "equal",
             "split_between": [test_user["user"]["id"], "Alice", "Bob"],
         }
-        r = api_client.post(f"{base_url}/api/expenses", headers=auth_headers, json=payload)
+        r = api_client.post(
+            f"{base_url}/api/expenses", headers=auth_headers, json=payload
+        )
         assert r.status_code == 200, r.text
         body = r.json()
         assert body["amount"] == 120.50
@@ -168,7 +178,9 @@ class TestBalance:
 
 # ---------- Borrow ----------
 class TestBorrow:
-    def test_create_and_list_borrow(self, api_client, base_url, auth_headers, test_user):
+    def test_create_and_list_borrow(
+        self, api_client, base_url, auth_headers, test_user
+    ):
         payload = {
             "from_user": "Alice",
             "to_user": test_user["user"]["id"],
@@ -176,7 +188,9 @@ class TestBorrow:
             "reason": "TEST_Lunch loan",
             "due_date": "2026-03-01",
         }
-        r = api_client.post(f"{base_url}/api/borrow", headers=auth_headers, json=payload)
+        r = api_client.post(
+            f"{base_url}/api/borrow", headers=auth_headers, json=payload
+        )
         assert r.status_code == 200, r.text
         bid = r.json()["id"]
         r2 = api_client.get(f"{base_url}/api/borrow", headers=auth_headers)

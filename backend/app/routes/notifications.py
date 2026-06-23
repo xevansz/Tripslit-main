@@ -1,7 +1,8 @@
 """Notification routes."""
 
 from fastapi import APIRouter, Depends
-from app.core import current_user
+
+from app.core.security import current_user
 
 router = APIRouter()
 

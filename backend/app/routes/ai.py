@@ -8,7 +8,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from google import genai
 from google.genai import types
 
-from app.core import GEMINI_API_KEY, current_user
+from app.core.config import GEMINI_API_KEY
+from app.core.security import current_user
 from app.db import get_db
 from app.models import ChatReq, now_iso
 

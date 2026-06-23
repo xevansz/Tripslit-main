@@ -1,10 +1,13 @@
 """Iteration 3 tests: Recommendations, Discover, Trip Tools, Achievements, Vendor expansion."""
+
 import pytest
 
 
 # ---------- Recommendations ----------
 class TestRecommendations:
-    def test_returns_3_items_with_required_fields(self, api_client, base_url, auth_headers):
+    def test_returns_3_items_with_required_fields(
+        self, api_client, base_url, auth_headers
+    ):
         r = api_client.get(f"{base_url}/api/recommendations", headers=auth_headers)
         assert r.status_code == 200, r.text
         data = r.json()
@@ -39,10 +42,21 @@ class TestDiscover:
 # ---------- Trip Tools ----------
 class TestTripTools:
     def test_returns_all_8_sections(self, api_client, base_url, auth_headers):
-        r = api_client.get(f"{base_url}/api/trip-tools/any-trip-id", headers=auth_headers)
+        r = api_client.get(
+            f"{base_url}/api/trip-tools/any-trip-id", headers=auth_headers
+        )
         assert r.status_code == 200, r.text
         data = r.json()
-        for k in ("journal", "itinerary", "packing", "polls", "chat", "album", "settlement", "reports"):
+        for k in (
+            "journal",
+            "itinerary",
+            "packing",
+            "polls",
+            "chat",
+            "album",
+            "settlement",
+            "reports",
+        ):
             assert k in data, f"missing section {k}"
 
     def test_journal_shape(self, api_client, base_url, auth_headers):
@@ -91,7 +105,9 @@ class TestTripTools:
             for k in ("id", "image", "loc", "lat", "lng"):
                 assert k in a
 
-    def test_settlement_4_items_3_completed_1_pending(self, api_client, base_url, auth_headers):
+    def test_settlement_4_items_3_completed_1_pending(
+        self, api_client, base_url, auth_headers
+    ):
         r = api_client.get(f"{base_url}/api/trip-tools/t1", headers=auth_headers)
         st = r.json()["settlement"]
         assert len(st) == 4
