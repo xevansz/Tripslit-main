@@ -1,6 +1,11 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Constants from "expo-constants";
+import * as Updates from "expo-updates";
 
-const BASE = process.env.EXPO_PUBLIC_BACKEND_URL;
+const BASE =
+  Updates.manifest?.extra?.backendUrl ??
+  Constants.expoConfig?.extra?.backendUrl;
+
 const DEFAULT_TIMEOUT = 30000; // 30 seconds
 
 // Validate environment variable
