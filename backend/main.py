@@ -20,8 +20,7 @@ async def lifespan(app):
     yield
 
     # On shutdown
-    async def shutdown():
-        await _db.close()
+    await _db.close()
 
 
 app = FastAPI(title="TripSplit API", version="1.0.0", lifespan=lifespan)
