@@ -76,7 +76,7 @@ async def get_balance(user: dict = Depends(current_user), db=Depends(get_db)):
     total_spent = 0
     you_owe = 0
     owed_to_you = 0
-    user_name = user.get("name", "")
+    user_id = user.get("id", "")
 
     for trip in trips:
         trip_expenses = await db.expenses.find(
@@ -100,11 +100,11 @@ async def get_balance(user: dict = Depends(current_user), db=Depends(get_db)):
             # Calculate user's share of this expense
             user_share = 0
             if split_method == "equal" and split_between:
-                if user_name in split_between:
+                if user_id in split_between:
                     user_share = amount / len(split_between)
             else:
                 # For percentage/custom, simplified equal split if user is included
-                if user_name in split_between:
+                if user_id in split_between:
                     user_share = amount / max(len(split_between), 1)
 
             # Track user's personal spending
@@ -112,10 +112,10 @@ async def get_balance(user: dict = Depends(current_user), db=Depends(get_db)):
                 total_spent += user_share
 
             # Calculate debts
-            if paid_by == user_name:
+            if paid_by == user_id:
                 # User paid: others owe them (total - user's own share)
                 owed_to_you += amount - user_share
-            elif user_name in split_between:
+            elif user_id in split_between:
                 # Someone else paid: user owes their share
                 you_owe += user_share
 
