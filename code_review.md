@@ -12,21 +12,7 @@ TODO — Fix Borrow netPosition
 
 Priority: later — not blocking the current cleanup pass.
 
-
 ### Frontend
-
----
-
-#### 11. `auth.tsx` uses `type User = any` and `signUp(data: any)` — `auth.tsx` L4, L9
-The `User` type is typed as `any` and the `signUp` argument is `any`. This defeats TypeScript's purpose — the `User` interface already exists in `api.ts` but isn't imported/used in the context. Type errors in auth will silently pass through.
-
----
-
-#### 12. Token is trusted from `AsyncStorage` without re-validation — `auth.tsx` L20–27
-On app startup, the stored token and user are restored from `AsyncStorage` without verifying the token with the server (e.g. calling `api.me()`). If the token has expired on the server, the user will be stuck in a broken state — all API calls will 401, but the UI will think they're logged in.
-
----
-
 #### 13. "Forgot password?" is a dead button — `login.tsx` L45–47
 ```jsx
 <TouchableOpacity style={{ alignSelf: "flex-end" }}>

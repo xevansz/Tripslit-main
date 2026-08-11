@@ -18,10 +18,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     (async () => {
-      const t = await getStoredToken();
-      const u = await getStoredUser();
-      if (t && u) setUser(u);
-      setLoading(false);
+      try {
+        const t = await getStoredToken();
+
+        if (t) {
+          const u = await api.me();
+          setUser(u);
+        }
+      } catch {
+        await clearSession();
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
     })();
   }, []);
 
