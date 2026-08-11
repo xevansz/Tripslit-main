@@ -12,10 +12,6 @@ TODO — Fix Borrow netPosition
 
 Priority: later — not blocking the current cleanup pass.
 
-#### 10. Vendor endpoints don't require authentication — `vendors.py` L199–217
-`/vendors`, `/vendors/{vid}`, `/discover`, `/recommendations` have no `current_user` dependency. Any unauthenticated request can access this data. This may be intentional for public browsing, but it's inconsistent with all other endpoints and undocumented.
-
----
 
 ### Frontend
 

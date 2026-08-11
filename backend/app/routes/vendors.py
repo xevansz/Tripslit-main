@@ -163,6 +163,7 @@ async def recommendations(user: dict = Depends(current_user)):
 
 
 @router.get("/discover")
+# public
 async def discover():
     return [
         {
@@ -197,6 +198,7 @@ async def discover():
 
 
 @router.get("/vendors")
+# public
 async def list_vendors(
     category: Optional[str] = None,
     q: Optional[str] = None,
@@ -210,6 +212,7 @@ async def list_vendors(
 
 
 @router.get("/vendors/{vid}")
+# public
 async def get_vendor(vid: str):
     for v in VENDOR_SEED:
         if v["id"] == vid:

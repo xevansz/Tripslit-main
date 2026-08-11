@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { api, setSession, clearSession, getStoredUser, getStoredToken } from "./api";
+import { api, setSession, clearSession, getStoredUser, getStoredToken, User } from "./api";
 
-type User = any;
 type AuthCtx = {
   user: User | null;
   loading: boolean;
