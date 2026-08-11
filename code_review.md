@@ -1,17 +1,5 @@
 # TripSplit — Code Review
 
----
-
-## 🐛 Bugs
-
-### Backend
----
-
-#### 3. `_is_trip_member` helper is **duplicated in 4 files** — potential divergence bug
-The exact same function is copy-pasted in `trips.py`, `expenses.py`, `wallet.py`, and `tools.py`. If the membership logic ever changes in one place (e.g. a "guest" role is added), the others silently stay wrong. This should be a shared utility in `app/core/` or `app/db/`.
-
----
-
 #### 4. Borrow list query mixes IDs and names — `borrow.py` L40–44
 ```python
 {"created_by": user["id"]},    # ← querying by ID

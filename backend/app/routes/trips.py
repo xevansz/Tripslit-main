@@ -7,15 +7,11 @@ from fastapi import APIRouter, Depends, HTTPException
 from app.core.security import current_user
 from app.db import get_db
 from app.models import TripCreateReq, now_iso
+from app.services.trip_membership import _is_trip_member
+
 
 router = APIRouter()
 
-
-def _is_trip_member(trip: dict, user_id: str) -> bool:
-    """Check if user is owner or member of trip."""
-    is_owner = trip.get("owner_id") == user_id
-    is_member = any(member.get("id") == user_id for member in trip.get("members", []))
-    return is_owner or is_member
 
 
 @router.post("")
