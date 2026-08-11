@@ -39,8 +39,8 @@ async def list_borrows(user: dict = Depends(current_user), db=Depends(get_db)):
         {
             "$or": [
                 {"created_by": user["id"]},
-                {"from_user": user.get("name", "")},
-                {"to_user": user.get("name", "")},
+                {"from_user": user.get("id", "")},
+                {"to_user": user.get("id", "")},
             ]
         },
         {"_id": 0},

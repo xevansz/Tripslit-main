@@ -176,7 +176,7 @@ export default function Borrow() {
                 l.due_date &&
                 new Date(l.due_date) < new Date() &&
                 l.status !== "settled";
-              const otherParty = l.from_user || l.to_user || "Unknown";
+              const otherParty = l.from_user === currentUser ? l.to_user : l.from_user;
               return (
                 <View key={l.id} style={styles.loan}>
                   <View style={styles.av}>

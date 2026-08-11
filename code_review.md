@@ -1,61 +1,16 @@
 # TripSplit — Code Review
 
 #### 4. Borrow list query mixes IDs and names — `borrow.py` L40–44
-```python
-{"created_by": user["id"]},    # ← querying by ID
-{"from_user": user.get("name", "")},  # ← querying by name
-{"to_user": user.get("name", "")},    # ← querying by name
-```
-`created_by` is stored as a user ID, but `from_user`/`to_user` are stored as free-text names entered in `BorrowCreateReq`. This is an inconsistent data model. If a user changes their display name, `from_user`/`to_user` queries will silently fail to find their records.
+Resolved / not applicable: Borrow participants intentionally support both registered TripSplit users and external contacts. Registered users are stored by user ID, while non-registered contacts are stored by name. list_borrows() queries from_user/to_user by the authenticated user's ID, so registered users remain discoverable even if their display name changes. External contacts are creator-local records and are intentionally name-based.
 
----
+TODO — Fix Borrow netPosition
+ Determine how to identify the current user's direction when a borrow involves a non-TripSplit contact.
+ Make the backend determine whether each borrow is owed to the current user or owed by the current user.
+ Return that direction with each borrow (e.g. owed_to_me / i_owe).
+ Update borrow.tsx so netPosition = owed_to_me − i_owe.
+ While doing this, reconcile the inconsistent identity checks in list_borrows() (ID) vs update_borrow() (name).
 
-#### 5. OTP is always hard-coded to `"123456"` — `auth.py` L51
-```python
-{"$set": {"code": "123456", ...}}
-```
-This is a critical security issue for any production or staging environment. OTP verification is entirely bypassed since any user can "verify" with `123456`. There's also no OTP expiry check in the `verify_otp` endpoint.
-
----
-
-#### 6. `netPosition` in the Borrow screen is calculated incorrectly — `borrow.tsx` L51–54
-```javascript
-const netPosition = loans.reduce((sum, l) => {
-    if (l.status === "settled") return sum;
-    return sum + l.amount;   // ← adds ALL loans, not net (owed_to_you - you_owe)
-}, 0);
-```
-This sums the raw amounts of all active loans indiscriminately. The net position should be: amounts where the current user is `to_user` (they are owed) minus amounts where the current user is `from_user` (they owe). Without the current user from context, direction is lost.
-
----
-
-#### 7. `otherParty` display logic is wrong — `borrow.tsx` L179
-```javascript
-const otherParty = l.from_user || l.to_user || "Unknown";
-```
-This always shows `from_user` regardless of whether the current user is the lender or borrower. A user could see their own name as the "other party". It needs to check who the current user is and show the counterpart.
-
----
-
-#### 8. Wallet screen makes N+1 sequential API calls — `wallet.tsx` L45–59
-```javascript
-for (const trip of trips.slice(0, 3)) {
-    const expenses = await api.listExpenses(trip.id);  // ← called in a loop
-```
-Sequential `await` inside a `for` loop blocks rendering for each trip. Should use `Promise.all()` for parallel fetching.
-
----
-
-#### 9. `grouppay_approve` does not persist `approved` state correctly for DummyStore — `grouppay.py` L50–56
-```python
-for m in members:
-    if m["name"] == member:
-        m["approved"] = True   # mutates local list
-await db.grouppay.update_one({"id": sid}, {"$set": {"members": members, ...}})
-```
-This works in MongoDB but in the DummyStore, `members` is a list of dicts fetched from `find_one`, which returns copies. The mutated list is passed back via `$set`, but the `update_one` in `DummyStore` iterates the stored list, applying `$set` to the top-level document keys. Since `members` is a list (not a top-level key it can iterate), it correctly does `item["members"] = members`. This is fine — but it's fragile and undocumented.
-
----
+Priority: later — not blocking the current cleanup pass.
 
 #### 10. Vendor endpoints don't require authentication — `vendors.py` L199–217
 `/vendors`, `/vendors/{vid}`, `/discover`, `/recommendations` have no `current_user` dependency. Any unauthenticated request can access this data. This may be intentional for public browsing, but it's inconsistent with all other endpoints and undocumented.

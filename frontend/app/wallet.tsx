@@ -44,19 +44,25 @@ export default function Wallet() {
       // Convert expenses to transactions format
       const trips = await api.listTrips();
       const txs: Transaction[] = [];
-      for (const trip of trips.slice(0, 3)) {
-        const expenses = await api.listExpenses(trip.id);
-        expenses.slice(0, 2).forEach((e: any, i: number) => {
+      const recentTrips = trips.slice(0,3);
+      const expensesByTrip = await Promise.all(
+        recentTrips.map((trip) => api.listExpenses(trip.id))
+      );
+
+      recentTrips.forEach((trip, index) => {
+        const expenses = expensesByTrip[index];
+
+        expenses.slice(0,2).forEach((e: any, i: number) => {
           txs.push({
-            id: `${trip.id}-${i}`,
-            name: e.paid_by || "Unknown",
-            note: e.description || "Expense",
-            amount: -e.amount,
-            time: "Recent",
-            icon: "arrow-up",
-          });
+      id: `${trip.id}-${i}`,
+      name: e.paid_by || "Unknown",
+      note: e.description || "Expense",
+      amount: -e.amount,
+      time: "Recent",
+      icon: "arrow-up",
         });
-      }
+      });
+    }); 
       setTransactions(txs.slice(0, 4));
     } catch (e: any) {
       setError(e.message || "Failed to load wallet");

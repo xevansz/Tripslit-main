@@ -1,7 +1,6 @@
 """Pydantic models for request/response validation."""
 
 from datetime import datetime
-from typing import List, Literal, Optional
 
 from pydantic import BaseModel, EmailStr, field_validator
 
@@ -42,7 +41,7 @@ class TokenResp(BaseModel):
     user: dict
 
 
-# ---------- Trip Models ----------
+# Trip Models
 class TripCreateReq(BaseModel):
     name: str
     destination: str

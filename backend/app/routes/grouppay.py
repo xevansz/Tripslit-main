@@ -42,14 +42,23 @@ async def grouppay_approve(
     sess = await db.grouppay.find_one({"id": sid}, {"_id": 0})
     if not sess:
         raise HTTPException(404, "Session not found")
+
     members = sess.get("members", [])
     # Verify the authenticated user matches the member being approved
     user_name = user.get("name", "")
+
     if member != user_name:
         raise HTTPException(403, "You can only approve your own share")
+
+    found = False
     for m in members:
         if m["name"] == member:
             m["approved"] = True
+            found = True
+
+    if not found:
+        raise HTTPException(403, "You are not a member of this session")
+
     all_approved = all(m["approved"] for m in members)
     status = "completed" if all_approved else "pending"
     await db.grouppay.update_one(
