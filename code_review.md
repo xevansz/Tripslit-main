@@ -1,5 +1,6 @@
 # TripSplit — Code Review
 
+### Backend
 #### 4. Borrow list query mixes IDs and names — `borrow.py` L40–44
 Resolved / not applicable: Borrow participants intentionally support both registered TripSplit users and external contacts. Registered users are stored by user ID, while non-registered contacts are stored by name. list_borrows() queries from_user/to_user by the authenticated user's ID, so registered users remain discoverable even if their display name changes. External contacts are creator-local records and are intentionally name-based.
 
@@ -13,48 +14,17 @@ TODO — Fix Borrow netPosition
 Priority: later — not blocking the current cleanup pass.
 
 ### Frontend
-#### 13. "Forgot password?" is a dead button — `login.tsx` L45–47
-```jsx
-<TouchableOpacity style={{ alignSelf: "flex-end" }}>
-    <Text style={styles.forgot}>Forgot password?</Text>
-</TouchableOpacity>
-```
-No `onPress` handler. Pressing it does nothing.
+* Implement Forgot Password flow
 
----
+Check whether the backend already has password-reset endpoints.
+Add the required API methods.
+Create the forgot-password screen.
+Implement email/OTP/reset-password flow.
+Connect “Forgot password?” on the login screen.
+Test the complete reset flow end-to-end.
 
-#### 14. "Request", "Lend", "Remind" buttons are non-functional — `borrow.tsx` L109–141
-All three `TouchableOpacity` action buttons have `testID` attributes but no `onPress` handlers. They are rendered but completely non-interactive.
-
----
-
-#### 15. "Add" button in Borrow header is non-functional — `borrow.tsx` L72–74
-```jsx
-<TouchableOpacity testID="b-new" style={styles.back}>
-    <Ionicons name="add" size={22} color={colors.text} />
-</TouchableOpacity>
-```
-No `onPress` — tapping the `+` button does nothing.
-
----
-
-#### 16. Recent Activity is **hardcoded mock data** — `home.tsx` L64–86
-```javascript
-const activity = [
-    { id: "a1", icon: "card", label: "Maria added Dinner — $84", ... },
-    ...
-```
-The home screen's "Recent activity" section never fetches real data. It always displays the same three hardcoded events regardless of what's actually in the database.
-
----
-
-#### 17. `useFocusEffect` and `useCallback` dependency arrays are empty but capture stale closures — multiple screens
-```javascript
-useFocusEffect(useCallback(() => { load(); }, []));
-```
-`load` is defined inside the component but excluded from the dependency array. While `load` itself is wrapped in `useCallback([])`, this pattern is technically a lint violation (`react-hooks/exhaustive-deps`). If `load` ever captures state/props, it will silently use stale values.
-
----
+* Request and lend and remind buttons implementation - borrow.tsx
+* "Add" button in borrow header in non-functionall - borrow.tsx
 
 #### 18. `api.ts` base URL resolution is fragile — `api.ts` L5–7
 ```typescript

@@ -15,8 +15,9 @@ export default function Vendors() {
   const [items, setItems] = useState<any[]>([]);
 
   const load = useCallback(() => {
-    api.listVendors(cat === "All" ? undefined : cat, q || undefined).then(setItems).catch(() => {});
+    api.listVendors(cat === "All" ? undefined : cat, q || undefined).then(setItems).catch(() => { });
   }, [cat, q]);
+
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
   const featured = items[0];

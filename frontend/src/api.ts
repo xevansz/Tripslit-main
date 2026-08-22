@@ -6,6 +6,8 @@ const BASE =
   Updates.manifest?.extra?.backendUrl ??
   Constants.expoConfig?.extra?.backendUrl;
 
+// const BASE = process.env.EXPO_PUBLIC_BACKEND_URL;
+
 const DEFAULT_TIMEOUT = 30000; // 30 seconds
 
 // Validate environment variable

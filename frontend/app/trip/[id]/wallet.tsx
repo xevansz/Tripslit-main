@@ -14,7 +14,7 @@ export default function TripWallet() {
   const [w, setW] = useState<any>(null);
 
   const load = useCallback(() => {
-    if (id) api.tripWallet(id).then(setW).catch(() => {});
+    if (id) api.tripWallet(id).then(setW).catch(() => { });
   }, [id]);
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
